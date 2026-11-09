@@ -3,14 +3,18 @@ import 'package:flutter/material.dart';
 class MyHomePage extends StatelessWidget {
   MyHomePage({super.key});
 
-  final String npm = '2406000001';
-  final String nama = 'Burhan';
-  final String kelas = 'PBP A';
+  final String npm = '2506600713';
+  final String nama = 'Sultan Noor Dafiq';
+  final String kelas = 'PBP E';
 
   final List<ItemHomepage> items = [
-    ItemHomepage('Lihat Proyek', Icons.folder),
-    ItemHomepage('Tambah Proyek', Icons.add_circle),
-    ItemHomepage('Logout', Icons.logout),
+    ItemHomepage('Lihat Experience', Icons.work_outline, Colors.blue.shade700),
+    ItemHomepage(
+      'Tambah Experience',
+      Icons.add_circle_outline,
+      Colors.green.shade700,
+    ),
+    ItemHomepage('Logout', Icons.logout, Colors.red.shade700),
   ];
 
   @override
@@ -103,10 +107,11 @@ class InfoCard extends StatelessWidget {
 }
 
 class ItemHomepage {
-  ItemHomepage(this.name, this.icon);
+  ItemHomepage(this.name, this.icon, this.color);
 
   final String name;
   final IconData icon;
+  final Color color;
 }
 
 class ItemCard extends StatelessWidget {
@@ -117,7 +122,7 @@ class ItemCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Theme.of(context).colorScheme.secondary,
+      color: item.color,
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
