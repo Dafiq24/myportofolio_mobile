@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:myportofolio_mobile/main.dart';
+import 'package:myportofolio_mobile/screens/experience_form.dart';
 import 'package:myportofolio_mobile/screens/menu.dart';
 import 'package:myportofolio_mobile/screens/project_form.dart';
 import 'package:myportofolio_mobile/widgets/project_card.dart';
@@ -42,6 +43,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Home'), findsOneWidget);
+    expect(find.text('Add Experience'), findsOneWidget);
     expect(find.text('Add Project'), findsOneWidget);
     expect(
       find.text('Explore personal experiences and projects!'),
@@ -136,6 +138,48 @@ void main() {
     final ScaffoldState formScaffold = tester.state(find.byType(Scaffold));
     formScaffold.openDrawer();
     await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Home'));
+    await tester.pumpAndSettle();
+    expect(find.byType(MyHomePage), findsOneWidget);
+  });
+
+  testWidgets('Experience form opens from card and Back returns to menu', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(const MyApp());
+
+    await tester.tap(find.text('Tambah Experience'));
+    await tester.pumpAndSettle();
+
+    expect(find.byType(ExperienceFormPage), findsOneWidget);
+    expect(find.text('Add Experience Form'), findsOneWidget);
+
+    await tester.pageBack();
+    await tester.pumpAndSettle();
+
+    expect(find.byType(MyHomePage), findsOneWidget);
+  });
+
+  testWidgets('drawer opens Experience form and Home replaces the route', (
+    WidgetTester tester,
+  ) async {
+    await tester.pumpWidget(const MyApp());
+
+    final ScaffoldState homeScaffold = tester.state(find.byType(Scaffold));
+    homeScaffold.openDrawer();
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('Add Experience'));
+    await tester.pumpAndSettle();
+    expect(find.byType(ExperienceFormPage), findsOneWidget);
+
+    final ScaffoldState formScaffold = tester.state(find.byType(Scaffold));
+    formScaffold.openDrawer();
+    await tester.pumpAndSettle();
+
+    expect(find.text('Add Experience'), findsOneWidget);
+    expect(find.text('Add Project'), findsOneWidget);
 
     await tester.tap(find.text('Home'));
     await tester.pumpAndSettle();

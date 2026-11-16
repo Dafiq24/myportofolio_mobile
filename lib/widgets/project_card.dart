@@ -1,12 +1,16 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:myportofolio_mobile/screens/experience_form.dart';
 import 'package:myportofolio_mobile/screens/project_form.dart';
 
+enum HomepageAction { viewExperience, addExperience, addProject, logout }
+
 class ItemHomepage {
-  ItemHomepage(this.name, this.icon, this.color);
+  ItemHomepage(this.name, this.icon, this.color, this.action);
 
   final String name;
   final IconData icon;
   final Color color;
+  final HomepageAction action;
 }
 
 class ItemCard extends StatelessWidget {
@@ -30,11 +34,26 @@ class ItemCard extends StatelessWidget {
               ),
             );
 
-          if (item.name == 'Tambah Proyek') {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const ProjectFormPage()),
-            );
+          switch (item.action) {
+            case HomepageAction.addExperience:
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ExperienceFormPage(),
+                ),
+              );
+              break;
+            case HomepageAction.addProject:
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ProjectFormPage(),
+                ),
+              );
+              break;
+            case HomepageAction.viewExperience:
+            case HomepageAction.logout:
+              break;
           }
         },
         child: Container(
