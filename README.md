@@ -11,8 +11,11 @@ MyPortfolio Mobile adalah aplikasi Flutter milik **Sultan Noor Dafiq** (`2506600
 - [Struktur Awal Proyek](#struktur-awal-proyek)
 - [Tutorial 8](#tutorial-8)
 - [Tugas Individu 7](#tugas-individu-7)
+- [Tutorial 9](#tutorial-9)
+- [Tugas Individu 8](#tugas-individu-8)
 - [Transparansi Penggunaan AI](#transparansi-penggunaan-ai)
 - [Pertanyaan Reflektif Tugas 7](#pertanyaan-reflektif-tugas-7)
+- [Pertanyaan Reflektif Tugas 8](#pertanyaan-reflektif-tugas-8)
 
 ## Menjalankan Proyek
 
@@ -63,13 +66,20 @@ Hasil terakhir sebelum dokumentasi ini dibuat:
 
 ```text
 lib/
-├── main.dart       # titik masuk aplikasi, tema, dan MaterialApp
-└── menu.dart       # halaman utama serta komponen kartu informasi dan aksi
+├── main.dart
+├── screens/
+│   ├── experience_form.dart
+│   ├── menu.dart
+│   └── project_form.dart
+└── widgets/
+    ├── left_drawer.dart
+    └── project_card.dart
 test/
+├── experience_form_test.dart
 └── widget_test.dart
 ```
 
-`main.dart` bertanggung jawab atas konfigurasi aplikasi, sedangkan `menu.dart` menyimpan tampilan menu agar kode lebih terpisah dan mudah dikembangkan pada tugas berikutnya.
+`main.dart` bertanggung jawab atas konfigurasi aplikasi dan tema. Folder `screens` menyimpan setiap halaman, sedangkan folder `widgets` menyimpan drawer dan kartu aksi yang digunakan kembali. Pemisahan ini membuat navigasi dan pengujian setiap fitur lebih mudah dikembangkan.
 
 ## Tutorial 8
 
@@ -127,6 +137,49 @@ Validasi akhir dilakukan melalui `flutter analyze`, `flutter test`, pemeriksaan 
 - [x] Melengkapi jawaban reflektif setelah implementasi final diaudit.
 - [x] Melengkapi log prompting dan evaluasi penggunaan AI pada finalisasi tugas.
 
+## Tutorial 9
+
+### Dokumentasi Tutorial 9
+
+#### (17/11/2026)
+
+Struktur aplikasi dirapikan dengan memisahkan halaman ke folder `screens` dan komponen yang digunakan kembali ke folder `widgets`. Dependensi `material_ui` ditambahkan dan impor Material diseragamkan. `LeftDrawer` dibuat sebagai drawer bersama yang menyediakan navigasi ke Home dan Add Project, sedangkan `ProjectCard` memisahkan representasi data aksi dari tampilan kartunya.
+
+Halaman `ProjectFormPage` dibuat sebagai `StatefulWidget` karena perlu mengelola nilai input dan validasi. Form menggunakan `GlobalKey<FormState>`, beberapa `TextFormField`, pilihan kategori, tombol simpan, dan `AlertDialog` yang merangkum seluruh data setelah validasi berhasil. Halaman utama tetap responsif dan tombol Tambah Proyek membuka form menggunakan `Navigator.push()`.
+
+Implementasi tutorial diperiksa melalui widget test, `flutter analyze`, pengujian visual pada Chrome, dan pemeriksaan diff. Fondasi drawer dipublikasikan pada commit [`c4e1718`](https://github.com/Dafiq24/myportofolio_mobile/commit/c4e17181fd733373ff787adf83bb8011ba53c2b6), sedangkan form proyek tervalidasi dipublikasikan pada commit [`069fe93`](https://github.com/Dafiq24/myportofolio_mobile/commit/069fe9334253252ef13c02961de3a3b6ba355841).
+
+## Tugas Individu 8
+
+### Dokumentasi Tugas 8
+
+#### (17/11/2026)
+
+Tugas 8 diterapkan pada bagian **Experience** agar konsisten dengan model portofolio Django. Halaman `ExperienceFormPage` memiliki delapan input: role title, organization, display period, timeline position, description, employment type, documentation image URL, dan related skills. Nilai employment type menggunakan pilihan yang sama dengan model web: internship, research, volunteer, part-time, full-time, dan freelance.
+
+Validasi tidak hanya memeriksa tipe input. Role title dan description wajib diisi; panjang teks dibatasi sesuai kebutuhan field; timeline position harus berupa bilangan bulat antara 0 dan 32767; dan URL dokumentasi opsional, tetapi jika diisi harus memakai skema `http` atau `https`. Setelah semua nilai valid, `AlertDialog` menampilkan seluruh isi form dan tombol OK menutup dialog sekaligus mereset form.
+
+Kartu Tambah Experience pada halaman utama membuka form dengan `Navigator.push()` sehingga tombol Back dapat mengembalikan pengguna ke Home. Drawer bersama menyediakan Home, Add Experience, dan Add Project menggunakan `Navigator.pushReplacement()` agar perpindahan menu mengganti route aktif. Aksi kartu dimodelkan menggunakan enum `HomepageAction`, sehingga logika route tidak bergantung pada teks label.
+
+Widget test mencakup validasi kosong, angka di luar rentang, URL tidak valid, dialog data valid, reset form, navigasi dari kartu, tombol Back, navigasi drawer, dan kembali ke Home. Seluruh pengujian lulus, `flutter analyze` tidak menemukan masalah, pemeriksaan visual di Chrome dinyatakan aman, dan hash commit lokal telah diverifikasi sama dengan branch `origin/main`.
+
+Perubahan utama dipublikasikan melalui:
+
+- [`ec9edeb`](https://github.com/Dafiq24/myportofolio_mobile/commit/ec9edeb1d9f9cbce3485509c0d46ab9b9ad6e3a2): form Experience dan validasinya.
+- [`8720b6c`](https://github.com/Dafiq24/myportofolio_mobile/commit/8720b6cba0b31268f81050c6fda89c6720ccb8b5): integrasi navigasi kartu, drawer, dan pengujian route.
+
+### Status Implementasi Tugas 8
+
+- [x] Membuat halaman form baru untuk data Experience.
+- [x] Menggunakan lebih dari tiga elemen input dan menyesuaikannya dengan model portofolio.
+- [x] Memvalidasi input wajib, panjang teks, bilangan bulat, rentang nilai, dan URL.
+- [x] Menampilkan seluruh data valid melalui pop-up.
+- [x] Menghubungkan kartu Tambah Experience ke halaman form.
+- [x] Menggunakan drawer bersama untuk Home, Add Experience, dan Add Project.
+- [x] Menambahkan pengujian form serta navigasi.
+- [x] Menjalankan `flutter test`, `flutter analyze`, dan pemeriksaan visual.
+- [x] Melengkapi refleksi dan transparansi penggunaan AI.
+
 ## Transparansi Penggunaan AI
 
 AI digunakan sebagai pendamping belajar, bukan sebagai pengganti verifikasi. Bantuan AI mencakup penjelasan konsep Flutter, diagnosis lingkungan pengembangan, penyusunan struktur awal widget, saran pengujian, peninjauan keluaran terminal, dan penyusunan dokumentasi. Pemilik proyek tetap menentukan identitas, konteks tombol, warna, struktur commit, serta keputusan akhir atas setiap perubahan.
@@ -145,6 +198,10 @@ Prompt diberikan secara bertahap dengan menyertakan tujuan chapter, kondisi proy
 | Koreksi tampilan | Meninjau tangkapan layar yang menunjukkan garis overflow kuning-hitam. | Mengidentifikasi keterbatasan rasio grid dan menyarankan layout responsif serta area gulir. | Perbaikan diterapkan dan tangkapan layar berikutnya tidak lagi menunjukkan overflow. |
 | Personalisasi Tugas 7 | Mengganti data tutorial dengan NPM, nama, kelas, serta tiga aksi portofolio yang berbeda warna. | Membantu memodelkan warna sebagai properti item dan memperbarui test. | Identitas, warna, teks, dan pesan tombol diperiksa langsung pada browser dan test. |
 | Finalisasi | Mengaudit implementasi dan menyusun dokumentasi, disclosure, log prompting, serta jawaban reflektif. | Membantu membuat inventaris widget dan menjelaskan konsep berdasarkan kode final. | Setiap jawaban disesuaikan dengan `main.dart` dan `menu.dart`, bukan sekadar jawaban generik. |
+| Tutorial 9 | Memeriksa dokumen tutorial terbaru dan struktur repositori sebelum menambahkan navigasi serta form. | Membantu memisahkan `screens` dan `widgets`, membuat drawer bersama, form proyek, validasi, dialog, dan test. | Form dijalankan di Chrome, seluruh nilai dialog diperiksa, dan perubahan dipisahkan menjadi commit fondasi serta commit form. |
+| Form Experience | Menyesuaikan form Tugas 8 dengan field model Experience pada proyek Django. | Membantu menyusun delapan input, pilihan kategori, batas panjang, validasi rentang bilangan, dan validasi URL. | Kasus invalid dan valid diuji langsung; kegagalan test akibat tombol di luar viewport diperbaiki dengan menggulir form pada test. |
+| Navigasi Tugas 8 | Menghubungkan kartu dan drawer tanpa merusak navigasi Home dan Add Project. | Menyarankan enum `HomepageAction`, `Navigator.push()` untuk kartu, `pushReplacement()` untuk drawer, dan test Back/Home. | Semua jalur diuji dari terminal dan browser, lalu hash lokal dan GitHub dibandingkan setelah push. |
+| Finalisasi Tugas 8 | Mengaudit rubrik, kode final, riwayat commit, hasil test, dan pertanyaan refleksi. | Membantu menyusun dokumentasi serta jawaban yang merujuk pada implementasi nyata. | Klaim README dicocokkan dengan file final dan hasil pengujian pengguna sebelum commit dokumentasi. |
 
 ### Evaluasi kritis dan koreksi manual
 
@@ -153,7 +210,7 @@ Prompt diberikan secara bertahap dengan menyertakan tujuan chapter, kondisi proy
 - Data `Burhan`, NPM, kelas, label tombol, dan warna dari contoh awal dikoreksi manual agar sesuai identitas Sultan Noor Dafiq dan tema Experience pada portofolio.
 - Saran AI selalu ditinjau karena AI dapat menghasilkan asumsi yang benar secara umum tetapi tidak sesuai rubrik, lingkungan Windows, atau kode aktual proyek.
 
-Keterbatasan saat ini adalah kartu aksi baru menampilkan `SnackBar` dan belum berpindah ke halaman lain. Hal ini disengaja karena navigasi dan integrasi data belum menjadi ruang lingkup Tugas 7.
+Keterbatasan saat ini adalah data form baru ditampilkan pada dialog dan belum disimpan permanen atau dikirim ke API Django. Integrasi autentikasi, pengambilan data Experience, dan penyimpanan ke backend menjadi ruang lingkup pengembangan berikutnya.
 
 ## Pertanyaan Reflektif Tugas 7
 
@@ -214,3 +271,29 @@ Dalam proyek ini, `Theme.of(context)` memakai context untuk mencari tema dari `M
 Hot reload memasukkan perubahan kode Dart ke aplikasi yang sedang berjalan lalu membangun ulang widget tree sambil mempertahankan state yang sudah ada. Fitur ini cepat dan cocok untuk perubahan tampilan, teks, warna, atau isi metode `build()`. Namun, perubahan pada inisialisasi tertentu, fungsi `main()`, atau struktur yang memerlukan pembuatan state baru mungkin tidak sepenuhnya diterapkan.
 
 Hot restart memulai ulang aplikasi Dart dari fungsi `main()` dan membuang seluruh state runtime, tetapi tidak melakukan build native penuh seperti menghentikan lalu membangun aplikasi dari awal. Hot restart digunakan ketika perubahan harus menjalankan kembali proses inisialisasi atau ketika state lama membuat hasil pengujian tidak representatif. Pada terminal `flutter run`, proyek ini menggunakan `r` untuk hot reload dan `R` untuk hot restart.
+
+## Pertanyaan Reflektif Tugas 8
+
+### 1. Jelaskan perbedaan antara `Navigator.push()` dan `Navigator.pushReplacement()` pada Flutter. Dalam kasus apa sebaiknya masing-masing digunakan pada aplikasi MyPortfolio?
+
+`Navigator.push()` menambahkan route baru di atas route aktif sehingga route sebelumnya tetap berada di stack. Karena itu, tombol Back dapat menutup route baru dan menampilkan halaman sebelumnya. Pada aplikasi ini, kartu Tambah Experience dan Tambah Proyek menggunakan `push()` karena pengguna wajar kembali ke menu setelah mengisi atau membatalkan form.
+
+`Navigator.pushReplacement()` mengganti route aktif dengan route baru. Route yang diganti tidak menjadi tujuan tombol Back. Drawer menggunakan metode ini untuk berpindah antara Home, Add Experience, dan Add Project karena menu tersebut merepresentasikan tujuan utama yang setara; mengganti route mencegah tumpukan halaman drawer yang sama terus bertambah setiap kali pengguna berpindah menu.
+
+### 2. Bagaimana kamu memanfaatkan hierarchy widget seperti `Scaffold`, `AppBar`, dan `Drawer` untuk membangun struktur halaman yang konsisten di seluruh aplikasi?
+
+Setiap halaman utama menggunakan `Scaffold` sebagai kerangka dasar. `AppBar` ditempatkan melalui properti `appBar`, `LeftDrawer` melalui properti `drawer`, dan konten khusus halaman melalui `body`. Dengan hierarchy tersebut, Home, Project Form, dan Experience Form memiliki posisi judul, tombol hamburger, warna AppBar, dan perilaku navigasi yang konsisten walaupun isi `body` berbeda.
+
+`LeftDrawer` dipisahkan menjadi satu widget yang digunakan kembali pada ketiga halaman. Perubahan daftar menu cukup dilakukan pada satu file dan otomatis berlaku pada seluruh halaman. `AppBar` mengambil warna dari `Theme.of(context).colorScheme.primary`, sehingga struktur halaman dan identitas visual tetap seragam.
+
+### 3. Dalam konteks desain antarmuka, apa kelebihan menggunakan layout widget seperti `Padding`, `SingleChildScrollView`, dan `ListView` saat menampilkan elemen-elemen form? Berikan contoh penggunaannya dari aplikasi kamu.
+
+`Padding` memberi ruang antara tepi layar dan elemen input sehingga label, border, serta pesan validasi tidak berhimpitan. Pada `ExperienceFormPage`, konten form diberi padding 16 piksel dan setiap input dipisahkan dengan `SizedBox` agar mudah dipindai.
+
+`SingleChildScrollView` membuat seluruh form dapat digulir ketika tinggi layar tidak cukup, keyboard muncul, atau pesan validasi menambah tinggi konten. Widget ini juga digunakan di dalam dialog agar rangkuman delapan field tetap dapat dibaca pada layar pendek. `ListView` cocok untuk kumpulan item vertikal yang panjang dan dapat digulir; pada aplikasi ini, `LeftDrawer` memakai `ListView` agar header dan semua opsi navigasi tetap dapat diakses jika menu bertambah atau ruang layar terbatas.
+
+### 4. Bagaimana kamu menyesuaikan warna tema agar aplikasi MyPortfolio memiliki identitas visual yang konsisten dengan brand portofolio?
+
+Tema global dibuat pada `MaterialApp` menggunakan `ColorScheme.fromSeed` dengan indigo sebagai `seedColor` dan amber sebagai warna sekunder. Indigo memberi kesan profesional dan menjadi warna utama AppBar serta header drawer, sementara amber dapat digunakan sebagai aksen yang kontras. Karena halaman mengambil warna dari `Theme.of(context)`, perubahan skema global dapat diterapkan tanpa mengubah setiap widget satu per satu.
+
+Kartu aksi tetap memiliki warna semantik yang mudah dibedakan: biru untuk melihat Experience, hijau untuk menambah Experience, indigo untuk menambah proyek, dan merah untuk Logout. Teks serta ikon pada kartu menggunakan warna putih agar kontras. Kombinasi tema global dan warna aksi ini menjaga identitas MyPortfolio sekaligus membantu pengguna mengenali fungsi tombol.
