@@ -19,16 +19,22 @@ class LeftDrawer extends StatelessWidget {
               children: [
                 Text(
                   'MyPortfolio',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 30,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
                   ),
                 ),
-                SizedBox(height: 10),
-                Text(
-                  'Explore personal experiences and projects!',
-                  style: TextStyle(fontSize: 15, color: Colors.white),
+                SizedBox(height: 8),
+                Expanded(
+                  child: Text(
+                    'Explore personal experiences and projects!',
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(fontSize: 15, color: Colors.white),
+                  ),
                 ),
               ],
             ),

@@ -26,14 +26,6 @@ class ItemCard extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () {
-          ScaffoldMessenger.of(context)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(
-              SnackBar(
-                content: Text('Kamu telah menekan tombol ${item.name}!'),
-              ),
-            );
-
           switch (item.action) {
             case HomepageAction.addExperience:
               Navigator.push(
@@ -53,6 +45,13 @@ class ItemCard extends StatelessWidget {
               break;
             case HomepageAction.viewExperience:
             case HomepageAction.logout:
+              ScaffoldMessenger.of(context)
+                ..hideCurrentSnackBar()
+                ..showSnackBar(
+                  SnackBar(
+                    content: Text('Kamu telah menekan tombol ${item.name}!'),
+                  ),
+                );
               break;
           }
         },

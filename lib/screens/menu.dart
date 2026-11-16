@@ -85,7 +85,7 @@ class MyHomePage extends StatelessWidget {
                       crossAxisSpacing: 10,
                       mainAxisSpacing: 10,
                       crossAxisCount: isWideScreen ? 4 : 2,
-                      childAspectRatio: isWideScreen ? 2 : 1,
+                      childAspectRatio: isWideScreen ? 1.6 : 1,
                       shrinkWrap: true,
                       children: items.map((ItemHomepage item) {
                         return ItemCard(item);

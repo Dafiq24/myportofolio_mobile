@@ -155,7 +155,7 @@ void main() {
     expect(find.byType(ExperienceFormPage), findsOneWidget);
     expect(find.text('Add Experience Form'), findsOneWidget);
 
-    await tester.pageBack();
+    await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
 
     expect(find.byType(MyHomePage), findsOneWidget);
