@@ -1,0 +1,62 @@
+name: Flutter CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: flutter-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Analyze and test
+    uses: VeryGoodOpenSource/very_good_workflows/.github/workflows/flutter_package.yml@v1
+    with:
+      flutter_version: 3.47.9
+      setup: dart run build_runner build
+      min_coverage: 0
+      show_uncovered: false
+      test_optimization: false
+
+  build_apk:
+    name: Build Android APK
+    needs: quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.47.9
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Generate JSON serialization code
+        run: dart run build_runner build
+
+      - name: Build release APK
+        run: >-
+          flutter build apk --release
+          --dart-define=API_BASE_URL=https://sultan-noor-myportofolio.pws.cs.ui.ac.id
+
+      - name: Upload release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: myportofolio-mobile-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+          if-no-files-found: error
+          retention-days: 14
