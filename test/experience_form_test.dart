@@ -1,12 +1,52 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:myportofolio_mobile/screens/experience_form.dart';
+import 'package:myportofolio_mobile/services/api_client.dart';
+import 'package:myportofolio_mobile/state/auth_state.dart';
+import 'package:provider/provider.dart';
 
 void main() {
   testWidgets('experience form validates input and displays every value', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const MaterialApp(home: ExperienceFormPage()));
+    final ApiClient apiClient = ApiClient(
+      client: MockClient((http.Request request) async {
+        expect(request.headers['authorization'], 'Token test-token');
+        final Map<String, dynamic> payload =
+            jsonDecode(request.body) as Map<String, dynamic>;
+        return http.Response(
+          jsonEncode(<String, dynamic>{
+            'id': 'experience-id',
+            ...payload,
+            'category_display': 'Full-Time',
+            'started_at': '2026-11-24T08:00:00Z',
+            'ended_at': null,
+            'is_ongoing': true,
+            'skill_list': <String>['Student Advocacy', 'Content Development'],
+            'star_count': 0,
+            'is_starred': false,
+          }),
+          201,
+        );
+      }),
+      baseUrl: 'https://example.com',
+    );
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          Provider<ApiClient>.value(value: apiClient),
+          ChangeNotifierProvider<AuthState>(
+            create: (_) =>
+                AuthState(apiClient: apiClient, initialToken: 'test-token'),
+          ),
+        ],
+        child: const MaterialApp(home: ExperienceFormPage()),
+      ),
+    );
 
     final Finder saveButton = find.byKey(
       const ValueKey('save-experience-button'),

@@ -1,5 +1,10 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:myportofolio_mobile/models/experience.dart';
+import 'package:myportofolio_mobile/services/api_client.dart';
+import 'package:myportofolio_mobile/state/auth_state.dart';
+import 'package:myportofolio_mobile/utils/auth_guard.dart';
 import 'package:myportofolio_mobile/widgets/left_drawer.dart';
+import 'package:provider/provider.dart';
 
 class ExperienceFormPage extends StatefulWidget {
   const ExperienceFormPage({super.key});
@@ -19,6 +24,7 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
   String _category = 'full-time';
   String _thumbnail = '';
   String _skills = '';
+  bool _isSubmitting = false;
 
   static const Map<String, String> _categories = {
     'internship': 'Internship',
@@ -106,12 +112,62 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
     });
   }
 
-  void _submitForm() {
+  Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
     FocusScope.of(context).unfocus();
+    if (!await ensureLoggedIn(context) || !mounted) {
+      return;
+    }
+
+    final AuthState authState = context.read<AuthState>();
+    final String? token = authState.token;
+    if (token == null) {
+      return;
+    }
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    try {
+      await context.read<ApiClient>().createExperience(
+        Experience(
+          title: _title.trim(),
+          organization: _organization.trim(),
+          period: _period.trim(),
+          displayOrder: int.parse(_displayOrder.trim()),
+          description: _description.trim(),
+          category: _category,
+          thumbnail: _thumbnail.trim().isEmpty ? null : _thumbnail.trim(),
+          skills: _skills.trim(),
+        ),
+        token,
+      );
+    } on ApiException catch (error) {
+      if (error.statusCode == 401) {
+        authState.clearSession();
+      }
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(error.message)));
+      return;
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    }
+
+    if (!mounted) {
+      return;
+    }
     showDialog<void>(
       context: context,
       builder: (BuildContext dialogContext) {
@@ -137,7 +193,11 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
             TextButton(
               onPressed: () {
                 Navigator.pop(dialogContext);
-                _resetForm();
+                if (Navigator.canPop(context)) {
+                  Navigator.pop(context, true);
+                } else {
+                  _resetForm();
+                }
               },
               child: const Text('OK'),
             ),
@@ -318,9 +378,17 @@ class _ExperienceFormPageState extends State<ExperienceFormPage> {
                   const SizedBox(height: 20),
                   FilledButton.icon(
                     key: const ValueKey('save-experience-button'),
-                    onPressed: _submitForm,
-                    icon: const Icon(Icons.save_outlined),
-                    label: const Text('Simpan'),
+                    onPressed: _isSubmitting ? null : _submitForm,
+                    icon: _isSubmitting
+                        ? const SizedBox.square(
+                            dimension: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Icon(Icons.save_outlined),
+                    label: Text(_isSubmitting ? 'Menyimpan...' : 'Simpan'),
                   ),
                 ],
               ),

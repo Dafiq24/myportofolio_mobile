@@ -191,4 +191,33 @@ class ApiClient {
 
     return Project.fromJson(decodedResponse);
   }
+
+  Future<Experience> createExperience(
+    Experience experience,
+    String token,
+  ) async {
+    final http.Response response = await _client.post(
+      _endpoint('experiences/'),
+      headers: <String, String>{
+        'authorization': 'Token $token',
+        'content-type': 'application/json',
+      },
+      body: jsonEncode(experience.toJson()),
+    );
+
+    if (response.statusCode != 201) {
+      throw ApiException(switch (response.statusCode) {
+        401 => 'Sesi berakhir. Silakan login kembali.',
+        403 => 'Hanya pemilik portofolio yang dapat menambah Experience.',
+        _ => 'Experience gagal disimpan. Silakan periksa kembali datanya.',
+      }, statusCode: response.statusCode);
+    }
+
+    final Object? decodedResponse = jsonDecode(response.body);
+    if (decodedResponse is! Map<String, dynamic>) {
+      throw const ApiException('Format Experience tersimpan tidak valid.');
+    }
+
+    return Experience.fromJson(decodedResponse);
+  }
 }

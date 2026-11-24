@@ -1,7 +1,9 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:myportofolio_mobile/models/experience.dart';
 import 'package:myportofolio_mobile/screens/experience_detail.dart';
+import 'package:myportofolio_mobile/screens/experience_form.dart';
 import 'package:myportofolio_mobile/services/api_client.dart';
+import 'package:myportofolio_mobile/utils/auth_guard.dart';
 import 'package:myportofolio_mobile/widgets/left_drawer.dart';
 
 class ExperienceListPage extends StatefulWidget {
@@ -32,6 +34,20 @@ class _ExperienceListPageState extends State<ExperienceListPage> {
     await _experiencesFuture;
   }
 
+  Future<void> _openExperienceForm() async {
+    if (!await ensureLoggedIn(context) || !mounted) {
+      return;
+    }
+
+    final bool? created = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute<bool>(builder: (_) => const ExperienceFormPage()),
+    );
+    if (created == true && mounted) {
+      await _refreshExperiences();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -44,6 +60,12 @@ class _ExperienceListPageState extends State<ExperienceListPage> {
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       drawer: const LeftDrawer(),
+      floatingActionButton: FloatingActionButton.extended(
+        key: const ValueKey('add-experience-fab'),
+        onPressed: _openExperienceForm,
+        icon: const Icon(Icons.add),
+        label: const Text('Tambah Experience'),
+      ),
       body: FutureBuilder<List<Experience>>(
         future: _experiencesFuture,
         builder:
