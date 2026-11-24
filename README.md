@@ -16,9 +16,11 @@ MyPortfolio Mobile adalah aplikasi Flutter milik **Sultan Noor Dafiq** (`2506600
 - [Tutorial 9](#tutorial-9)
 - [Tugas Individu 8](#tugas-individu-8)
 - [Tutorial 10](#tutorial-10)
+- [Tugas Individu 9](#tugas-individu-9)
 - [Transparansi Penggunaan AI](#transparansi-penggunaan-ai)
 - [Pertanyaan Reflektif Tugas 7](#pertanyaan-reflektif-tugas-7)
 - [Pertanyaan Reflektif Tugas 8](#pertanyaan-reflektif-tugas-8)
+- [Pertanyaan Reflektif Tugas 9](#pertanyaan-reflektif-tugas-9)
 
 ## Menjalankan Proyek
 
@@ -44,20 +46,20 @@ Visual Studio belum dipasang karena proyek ini tidak menargetkan aplikasi deskto
 git clone https://github.com/Dafiq24/myportofolio_mobile.git
 cd myportofolio_mobile
 flutter pub get
-dart run build_runner build
+dart run build_runner build --delete-conflicting-outputs
 flutter doctor -v
 flutter devices
 flutter run -d chrome --dart-define=API_BASE_URL=http://127.0.0.1:8000
 ```
 
-`API_BASE_URL` dapat diarahkan ke backend lain menggunakan `--dart-define`. Nilai bawaan `http://10.0.2.2:8000` ditujukan untuk Android Emulator. File hasil generator `*.g.dart` tidak disimpan di Git, sehingga `dart run build_runner build` wajib dijalankan setelah clone atau perubahan model JSON.
+`API_BASE_URL` dapat diarahkan ke backend lain menggunakan `--dart-define`. Nilai bawaan `http://10.0.2.2:8000` ditujukan untuk Android Emulator. Backend production tersedia di [PWS MyPortfolio](https://sultan-noor-myportofolio.pws.cs.ui.ac.id), sedangkan kontrak API berada di `/api/v1/`. File hasil generator `*.g.dart` tidak disimpan di Git, sehingga generator wajib dijalankan setelah clone atau perubahan model JSON.
 
 Pada sesi `flutter run`, tekan `r` untuk hot reload, `R` untuk hot restart, dan `q` untuk menghentikan aplikasi.
 
 ### Validasi
 
 ```powershell
-dart run build_runner build
+dart run build_runner build --delete-conflicting-outputs
 flutter analyze
 flutter test
 git diff --check
@@ -66,7 +68,7 @@ git diff --check
 Hasil terakhir sebelum dokumentasi ini dibuat:
 
 - `flutter analyze`: tidak menemukan masalah.
-- `flutter test`: seluruh 16 unit dan widget test lulus.
+- `flutter test`: seluruh 23 unit dan widget test lulus.
 - `git diff --check`: tidak menemukan whitespace error; peringatan LF ke CRLF hanya berkaitan dengan normalisasi line ending Git di Windows.
 - GitHub Actions: job kualitas dan build APK lulus; artifact release tersedia dari workflow `Flutter CI`.
 
@@ -77,9 +79,12 @@ lib/
 ├── config.dart
 ├── main.dart
 ├── models/
+│   ├── experience.dart
 │   └── project.dart
 ├── screens/
+│   ├── experience_detail.dart
 │   ├── experience_form.dart
+│   ├── experience_list.dart
 │   ├── login.dart
 │   ├── menu.dart
 │   ├── project_detail.dart
@@ -98,6 +103,8 @@ test/
 ├── api_client_test.dart
 ├── auth_flow_test.dart
 ├── experience_form_test.dart
+├── experience_list_test.dart
+├── experience_model_test.dart
 ├── project_list_test.dart
 ├── project_model_test.dart
 └── widget_test.dart
@@ -249,6 +256,45 @@ Workflow diperkenalkan pada commit [`176949b`](https://github.com/Dafiq24/myport
 - [x] Menjalankan 16 test dan analyzer tanpa masalah.
 - [x] Menjalankan CI serta menghasilkan artifact APK release.
 
+## Tugas Individu 9
+
+### Dokumentasi Tugas 9
+
+#### (24/11/2026)
+
+Tugas 9 mengintegrasikan bagian **Experience** sebagai bagian portofolio selain Project. Model `Experience` menggunakan `@JsonSerializable(fieldRename: FieldRename.snake)` dan mengikuti kontrak serializer Django: field yang dapat ditulis dikirim pada POST, sementara UUID, label kategori, tanggal terkelola server, status ongoing, daftar skill terurai, dan metadata star hanya dibaca dari respons. Fondasi model serta pengujian serialisasi dipublikasikan pada commit [`b4df885`](https://github.com/Dafiq24/myportofolio_mobile/commit/b4df885041213738b8dfc472d9cbbd778be1c634).
+
+`ApiClient` kemudian diperluas dengan GET daftar dan detail Experience. `ExperienceListPage` menyimpan Future di `initState()`, menggunakan `FutureBuilder` dan `RefreshIndicator`, serta menyediakan loading, error dengan Retry, empty state, daftar data, dan navigasi detail publik. `ExperienceDetailPage` menampilkan seluruh data utama, termasuk organisasi, periode, kategori, deskripsi, dokumentasi, skill, tanggal, status ongoing, dan star. Alur baca publik beserta MockClient dan widget test dipublikasikan pada commit [`4923073`](https://github.com/Dafiq24/myportofolio_mobile/commit/49230738985e07796da4343b0e85bdbb4d29f581).
+
+Form Experience dari Tugas 8 dihubungkan ke endpoint POST. Pembukaan form dari daftar dilindungi oleh `ensureLoggedIn(context)`, token berasal dari `AuthState`, dan permintaan membawa header `Authorization: Token <key>`. Respons sukses menampilkan konfirmasi, kembali ke daftar, lalu mengambil ulang data sehingga entri baru langsung muncul. `ApiException` ditampilkan melalui `SnackBar`; respons `401` menghapus token lokal, sedangkan `403` mempertahankan sesi dan menjelaskan pembatasan akun. Integrasi ini dipublikasikan pada commit [`b6db144`](https://github.com/Dafiq24/myportofolio_mobile/commit/b6db1447782441c3b2598bef3fd2eeaebb3a719d).
+
+### Kontrak API Experience
+
+| Operasi | Method dan endpoint | Akses |
+| --- | --- | --- |
+| Daftar Experience | `GET /api/v1/experiences/` | Publik |
+| Detail Experience | `GET /api/v1/experiences/<uuid>/` | Publik |
+| Tambah Experience | `POST /api/v1/experiences/` | Token pemilik portofolio |
+
+### Pengujian dan verifikasi
+
+Pengujian otomatis mencakup pemetaan JSON dua arah, header token pada POST, daftar dan detail publik, error-retry-empty state, validasi form, respons sukses, sesi kedaluwarsa, serta refresh daftar setelah POST. Dua skenario terakhir memastikan respons `401` benar-benar menghapus sesi dan hasil POST benar-benar dimuat kembali dari API, bukan hanya ditambahkan secara semu pada UI. Audit akhir menghasilkan 23 test lulus, format konsisten, dan analyzer tanpa isu.
+
+Verifikasi manual dilakukan dengan backend Django lokal: daftar serta detail dapat dibaca tanpa login, tombol Tambah Experience mengarahkan pengguna yang belum terautentikasi ke login, data valid tersimpan ke Django, daftar otomatis diperbarui, dan logout membersihkan sesi. [Flutter CI run #45418918427](https://github.com/Dafiq24/myportofolio_mobile/actions/runs/45418918427) untuk integrasi POST Experience berhasil menjalankan pemeriksaan kualitas dan build Android, lalu menghasilkan artifact `myportofolio-mobile-apk` berukuran sekitar 24,06 MB.
+
+### Status Implementasi Tugas 9
+
+- [x] Membuat model Experience dengan generated JSON dan field server-only.
+- [x] Mengabaikan `*.g.dart` dari Git dan analyzer, tetapi membuatnya ulang saat setup serta CI.
+- [x] Menyediakan GET daftar dan detail Experience secara publik.
+- [x] Menangani loading, error, Retry, empty state, refresh, daftar, dan detail.
+- [x] Menghubungkan daftar ke halaman utama dan drawer.
+- [x] Melindungi form dan POST menggunakan token dari `AuthState`.
+- [x] Menangani keberhasilan, `401`, `403`, dan kegagalan API lainnya.
+- [x] Menyegarkan daftar setelah entri baru berhasil dibuat.
+- [x] Menambahkan unit test MockClient serta widget test bermakna.
+- [x] Menjalankan format check, analyzer, 23 test, CI, dan build artifact APK.
+
 ## Transparansi Penggunaan AI
 
 AI digunakan sebagai pendamping belajar, bukan sebagai pengganti verifikasi. Bantuan AI mencakup penjelasan konsep Flutter, diagnosis lingkungan pengembangan, penyusunan struktur awal widget, saran pengujian, peninjauan keluaran terminal, dan penyusunan dokumentasi. Pemilik proyek tetap menentukan identitas, konteks tombol, warna, struktur commit, serta keputusan akhir atas setiap perubahan.
@@ -274,6 +320,10 @@ Prompt diberikan secara bertahap dengan menyertakan tujuan chapter, kondisi proy
 | Tutorial 10 backend | Mencocokkan kebutuhan token authentication, CORS, Project API, dan izin pemilik dengan Django yang sudah ada. | Membantu membuat model, serializer, endpoint, permission, migration, dan regression test tanpa merusak API Experience atau Certification. | System check, migration check, test API, PWS deployment, serta kesamaan hash GitHub dan PWS diverifikasi sebelum beralih ke Flutter. |
 | Tutorial 10 Flutter | Mengintegrasikan model Project, API publik, detail, autentikasi token, POST, logout, dan penanganan sesi secara bertahap. | Membantu menyusun konfigurasi environment, model generated JSON, ApiClient, Provider, UI states, navigation guard, dan MockClient tests. | Setiap chapter diuji melalui analyzer, seluruh test, browser, backend lokal, commit terpisah, dan pemeriksaan hash remote. |
 | Tutorial 10 CI | Menyiapkan workflow kualitas dan artifact APK ketika build Gradle lokal terganggu timeout Maven. | Membantu mengonfigurasi reusable Very Good Workflow, generator sebelum analyze/test, build release, serta upload artifact. | Run GitHub Actions diperiksa langsung hingga kedua job sukses dan artifact APK benar-benar tersedia. |
+| Model Experience | Mencocokkan model Flutter dengan serializer Experience Django dan membatasi payload POST. | Membantu memetakan snake_case, nilai default, tipe nullable, dan field yang hanya ditetapkan server. | Hasil `fromJson()` serta `toJson()` diperiksa melalui unit test dan dibandingkan dengan respons API nyata. |
+| Integrasi baca Tugas 9 | Menambahkan daftar dan detail Experience publik tanpa mengubah kontrak API lama. | Membantu menyusun Future sekali di `initState()`, state loading/error/retry/empty, refresh, dan tampilan detail. | Alur diuji melalui MockClient, widget test, browser, dan backend Django lokal sebelum commit. |
+| Integrasi tulis Tugas 9 | Menghubungkan form Experience ke token API dan memastikan data baru langsung muncul. | Membantu menyusun POST, guard login, penanganan `401`/`403`, dialog sukses, dan refresh daftar. | Login, POST, penyimpanan Django, refresh, detail, logout, sesi kedaluwarsa, serta header token diverifikasi manual dan otomatis. |
+| Finalisasi Tugas 9 | Mengaudit checklist, pertanyaan reflektif, test suite, CI, artifact, dan histori commit. | Membantu menyusun dokumentasi berdasarkan implementasi final dan menambahkan skenario regresi sesi kedaluwarsa serta refresh setelah POST. | Pertanyaan disalin ulang dari dokumen tugas, klaim README dicocokkan dengan kode, dan seluruh 23 test dijalankan ulang. |
 
 ### Evaluasi kritis dan koreksi manual
 
@@ -282,7 +332,7 @@ Prompt diberikan secara bertahap dengan menyertakan tujuan chapter, kondisi proy
 - Data `Burhan`, NPM, kelas, label tombol, dan warna dari contoh awal dikoreksi manual agar sesuai identitas Sultan Noor Dafiq dan tema Experience pada portofolio.
 - Saran AI selalu ditinjau karena AI dapat menghasilkan asumsi yang benar secara umum tetapi tidak sesuai rubrik, lingkungan Windows, atau kode aktual proyek.
 
-Integrasi Project kini sudah membaca dan menyimpan data melalui API Django dengan autentikasi token. Keterbatasan berikutnya berada pada bagian Experience: form masih menampilkan dialog lokal dan daftar Experience belum dikonsumsi oleh Flutter. Integrasi penuh Experience menjadi ruang lingkup Tugas Individu 9.
+Integrasi Project dan Experience kini dapat membaca data publik serta membuat data baru melalui API Django dengan autentikasi token. AI sempat menghasilkan hash commit lengkap yang tidak boleh diasumsikan hanya dari hash pendek; hash tersebut kemudian diambil langsung dari Git sebelum dimasukkan ke dokumentasi. Pengujian juga tidak hanya mengikuti jalur sukses: skenario token kedaluwarsa dan refresh setelah POST ditambahkan untuk membuktikan bahwa state aplikasi benar-benar konsisten dengan backend. Keterbatasan yang masih ada adalah aplikasi Flutter belum menyediakan PATCH dan DELETE untuk Experience; kedua operasi tersebut tetap tersedia pada API web, tetapi tidak termasuk checklist minimal tugas ini.
 
 ## Pertanyaan Reflektif Tugas 7
 
@@ -369,3 +419,31 @@ Setiap halaman utama menggunakan `Scaffold` sebagai kerangka dasar. `AppBar` dit
 Tema global dibuat pada `MaterialApp` menggunakan `ColorScheme.fromSeed` dengan indigo sebagai `seedColor` dan amber sebagai warna sekunder. Indigo memberi kesan profesional dan menjadi warna utama AppBar serta header drawer, sementara amber dapat digunakan sebagai aksen yang kontras. Karena halaman mengambil warna dari `Theme.of(context)`, perubahan skema global dapat diterapkan tanpa mengubah setiap widget satu per satu.
 
 Kartu aksi tetap memiliki warna semantik yang mudah dibedakan: biru untuk melihat Experience, hijau untuk menambah Experience, indigo untuk menambah proyek, dan merah untuk Logout. Teks serta ikon pada kartu menggunakan warna putih agar kontras. Kombinasi tema global dan warna aksi ini menjaga identitas MyPortfolio sekaligus membantu pengguna mengenali fungsi tombol.
+
+## Pertanyaan Reflektif Tugas 9
+
+### Assignment 9
+
+1. **Mengapa menggunakan `@JsonSerializable(fieldRename: FieldRename.snake)` dan `@JsonKey(includeToJson: false)`?**
+
+   Model bertipe memberi satu kontrak data yang dapat digunakan ulang oleh service, screen, dan test. `fieldRename: FieldRename.snake` memetakan nama Dart seperti `displayOrder`, `categoryDisplay`, dan `starCount` secara konsisten ke `display_order`, `category_display`, dan `star_count` milik DRF. `includeToJson: false` mencegah field yang dikelola server—misalnya `id`, tanggal, status ongoing, label kategori, dan metadata star—ikut terkirim pada POST.
+
+   Jika widget membentuk `Map<String, dynamic>` mentah, salah ketik seperti `displayOrder` pada payload dapat lolos dari compiler tetapi tidak dikenali serializer yang mengharapkan `display_order`. Bug lain yang dicegah pada Experience adalah pengiriman ulang UUID atau `star_count`; server dapat menolak payload atau menerima data yang seharusnya tidak boleh ditentukan klien. Generated serialization membuat aturan itu eksplisit, terpusat, dan dapat diuji.
+
+2. **Mengapa Future untuk `FutureBuilder` dibuat di `initState()`, dan mengapa kegagalan HTTP dilempar sebagai `ApiException`?**
+
+   `build()` dapat dipanggil berkali-kali akibat perubahan tema, ukuran layar, state ancestor, atau `setState()`. Jika `fetchExperiences()` dibuat langsung di `build()`, setiap rebuild dapat mengirim GET baru, menampilkan loading berulang, memboroskan jaringan, dan memunculkan race condition ketika respons datang tidak berurutan. Karena itu `_experiencesFuture` dibuat sekali di `initState()`. Saat pengguna menekan Retry, melakukan pull-to-refresh, atau selesai POST, aplikasi secara sengaja mengganti Future tersebut melalui `_loadExperiences()`.
+
+   `ApiException` mempertahankan makna kegagalan melalui pesan dan status HTTP. Dengan begitu UI dapat membedakan `401` yang harus menghapus sesi, `403` yang harus mempertahankan token tetapi menjelaskan izin, dan kegagalan lain yang cukup ditampilkan sebagai pesan. Mengembalikan `null` akan mencampur “tidak ada data” dengan “permintaan gagal”, menghilangkan status respons, dan berisiko menimbulkan null error jauh dari penyebab aslinya.
+
+3. **Perbandingan `SessionAuthentication` dan `TokenAuthentication`.**
+
+   `SessionAuthentication` mengandalkan cookie session Django. Browser menyimpan cookie dan mengirimkannya otomatis; untuk metode yang mengubah data, perlindungan CSRF juga diperlukan. Mekanisme ini sesuai untuk halaman Django dan DRF browsable API karena keduanya berjalan dalam konteks browser serta dapat memakai alur login web.
+
+   `TokenAuthentication` memakai nilai token eksplisit pada header `Authorization: Token <key>`. Aplikasi Flutter tidak bergantung pada cookie browser, sehingga token lebih mudah disimpan sebagai state aplikasi dan dikirim melalui `ApiClient` pada setiap operasi terlindungi. Backend tetap mengaktifkan `SessionAuthentication` agar halaman web, admin, dan browsable API terus berfungsi, sementara Flutter menggunakan `TokenAuthentication`. Keduanya berbagi aturan permission yang sama; perbedaannya berada pada cara identitas permintaan dibuktikan.
+
+4. **Peran job quality dan `build_apk`, serta alasan `*.g.dart` diabaikan.**
+
+   Job `quality` menggunakan reusable workflow `VeryGoodOpenSource/very_good_workflows` untuk checkout, setup Flutter, instalasi dependency, menjalankan setup generator, memeriksa format, menganalisis kode, dan menjalankan test. Job `build_apk` baru berjalan setelah quality lulus. Job tersebut menyiapkan Flutter pada runner Linux, membuat ulang generated JSON, membangun APK release dengan `API_BASE_URL` PWS, lalu mengunggah `app-release.apk` sebagai artifact `myportofolio-mobile-apk`.
+
+   Berkas `*.g.dart` diabaikan karena merupakan hasil deterministik dari model sumber dan versi generator, bukan sumber kebenaran yang perlu diedit manual. Meng-commit-nya dapat menimbulkan diff bising, konflik merge, atau file generated yang tertinggal ketika model berubah. CI tetap dapat menganalisis dan membangun aplikasi karena workflow menjalankan `dart run build_runner build` setelah dependency terpasang. Dengan demikian checkout bersih membuktikan bahwa generated code memang dapat direproduksi dari sumber yang tersimpan di repositori.
