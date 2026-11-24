@@ -145,4 +145,52 @@ void main() {
     expect(find.byType(AlertDialog), findsNothing);
     expect(find.text('Advocacy & Student Welfare Intern'), findsNothing);
   });
+
+  testWidgets('expired Experience session is cleared after a 401 response', (
+    WidgetTester tester,
+  ) async {
+    final ApiClient apiClient = ApiClient(
+      client: MockClient((http.Request request) async {
+        expect(request.method, 'POST');
+        expect(request.headers['authorization'], 'Token expired-token');
+        return http.Response('{}', 401);
+      }),
+      baseUrl: 'https://example.com',
+    );
+    final AuthState authState = AuthState(
+      apiClient: apiClient,
+      initialToken: 'expired-token',
+    );
+
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          Provider<ApiClient>.value(value: apiClient),
+          ChangeNotifierProvider<AuthState>.value(value: authState),
+        ],
+        child: const MaterialApp(home: ExperienceFormPage()),
+      ),
+    );
+
+    await tester.enterText(
+      find.byKey(const ValueKey('experience-title-field')),
+      'Expired Session Experience',
+    );
+    await tester.enterText(
+      find.byKey(const ValueKey('experience-description-field')),
+      'This request should clear the expired authentication session.',
+    );
+    await tester.drag(
+      find.byKey(const ValueKey('experience-form-scroll-view')),
+      const Offset(0, -1000),
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('save-experience-button')));
+    await tester.pumpAndSettle();
+
+    expect(authState.isAuthenticated, isFalse);
+    expect(authState.token, isNull);
+    expect(find.text('Sesi berakhir. Silakan login kembali.'), findsOneWidget);
+    expect(find.byType(AlertDialog), findsNothing);
+  });
 }
