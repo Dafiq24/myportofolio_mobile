@@ -23,6 +23,12 @@ class MyHomePage extends StatelessWidget {
       HomepageAction.addExperience,
     ),
     ItemHomepage(
+      'Lihat Proyek',
+      Icons.folder_open_outlined,
+      Colors.teal.shade700,
+      HomepageAction.viewProjects,
+    ),
+    ItemHomepage(
       'Tambah Proyek',
       Icons.add_box_outlined,
       Colors.indigo.shade700,

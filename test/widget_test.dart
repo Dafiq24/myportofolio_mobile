@@ -18,7 +18,7 @@ void main() {
     expect(find.text('PBP E'), findsOneWidget);
     expect(find.text('Burhan'), findsNothing);
     expect(find.byType(InfoCard), findsNWidgets(3));
-    expect(find.byType(ItemCard), findsNWidgets(4));
+    expect(find.byType(ItemCard), findsNWidgets(5));
 
     final List<ItemCard> actionCards = tester
         .widgetList<ItemCard>(find.byType(ItemCard))
@@ -26,6 +26,7 @@ void main() {
     expect(actionCards.map((ItemCard card) => card.item.color), <Color>[
       Colors.blue.shade700,
       Colors.green.shade700,
+      Colors.teal.shade700,
       Colors.indigo.shade700,
       Colors.red.shade700,
     ]);
@@ -43,6 +44,7 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Home'), findsOneWidget);
+    expect(find.text('View Projects'), findsOneWidget);
     expect(find.text('Add Experience'), findsOneWidget);
     expect(find.text('Add Project'), findsOneWidget);
     expect(

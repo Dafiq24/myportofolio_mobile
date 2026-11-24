@@ -1,8 +1,15 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:myportofolio_mobile/screens/experience_form.dart';
 import 'package:myportofolio_mobile/screens/project_form.dart';
+import 'package:myportofolio_mobile/screens/project_list.dart';
 
-enum HomepageAction { viewExperience, addExperience, addProject, logout }
+enum HomepageAction {
+  viewExperience,
+  viewProjects,
+  addExperience,
+  addProject,
+  logout,
+}
 
 class ItemHomepage {
   ItemHomepage(this.name, this.icon, this.color, this.action);
@@ -40,6 +47,14 @@ class ItemCard extends StatelessWidget {
                 context,
                 MaterialPageRoute(
                   builder: (context) => const ProjectFormPage(),
+                ),
+              );
+              break;
+            case HomepageAction.viewProjects:
+              Navigator.push(
+                context,
+                MaterialPageRoute<void>(
+                  builder: (context) => ProjectListPage(),
                 ),
               );
               break;
