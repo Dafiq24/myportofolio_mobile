@@ -6,6 +6,7 @@ import 'package:http/testing.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:myportofolio_mobile/main.dart';
 import 'package:myportofolio_mobile/screens/experience_form.dart';
+import 'package:myportofolio_mobile/screens/experience_list.dart';
 import 'package:myportofolio_mobile/screens/menu.dart';
 import 'package:myportofolio_mobile/screens/project_form.dart';
 import 'package:myportofolio_mobile/services/api_client.dart';
@@ -62,18 +63,17 @@ void main() {
     ]);
 
     await tester.tap(find.text('Lihat Experience'));
-    await tester.pump();
+    await tester.pumpAndSettle();
 
-    expect(
-      find.text('Kamu telah menekan tombol Lihat Experience!'),
-      findsOneWidget,
-    );
+    expect(find.byType(ExperienceListPage), findsOneWidget);
+    expect(find.text('Belum ada Experience yang tersedia.'), findsOneWidget);
 
     final ScaffoldState scaffoldState = tester.state(find.byType(Scaffold));
     scaffoldState.openDrawer();
     await tester.pumpAndSettle();
 
     expect(find.text('Home'), findsOneWidget);
+    expect(find.text('View Experiences'), findsOneWidget);
     expect(find.text('View Projects'), findsOneWidget);
     expect(find.text('Add Experience'), findsOneWidget);
     expect(find.text('Add Project'), findsOneWidget);

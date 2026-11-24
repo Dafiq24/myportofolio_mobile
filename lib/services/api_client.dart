@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:myportofolio_mobile/config.dart';
+import 'package:myportofolio_mobile/models/experience.dart';
 import 'package:myportofolio_mobile/models/project.dart';
 
 class ApiException implements Exception {
@@ -72,6 +73,52 @@ class ApiClient {
     }
 
     return Project.fromJson(decodedResponse);
+  }
+
+  Future<List<Experience>> fetchExperiences() async {
+    final http.Response response = await _client.get(_endpoint('experiences/'));
+
+    if (response.statusCode != 200) {
+      throw ApiException(
+        'Gagal memuat Experience. Silakan coba lagi.',
+        statusCode: response.statusCode,
+      );
+    }
+
+    final Object? decodedResponse = jsonDecode(response.body);
+    if (decodedResponse is! List<dynamic>) {
+      throw const ApiException('Format data Experience tidak valid.');
+    }
+
+    return decodedResponse
+        .map(
+          (dynamic item) => Experience.fromJson(
+            Map<String, dynamic>.from(item as Map<dynamic, dynamic>),
+          ),
+        )
+        .toList(growable: false);
+  }
+
+  Future<Experience> fetchExperience(String experienceId) async {
+    final http.Response response = await _client.get(
+      _endpoint('experiences/$experienceId/'),
+    );
+
+    if (response.statusCode != 200) {
+      throw ApiException(
+        response.statusCode == 404
+            ? 'Experience tidak ditemukan.'
+            : 'Gagal memuat detail Experience. Silakan coba lagi.',
+        statusCode: response.statusCode,
+      );
+    }
+
+    final Object? decodedResponse = jsonDecode(response.body);
+    if (decodedResponse is! Map<String, dynamic>) {
+      throw const ApiException('Format detail Experience tidak valid.');
+    }
+
+    return Experience.fromJson(decodedResponse);
   }
 
   Future<String> login({

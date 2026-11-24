@@ -1,7 +1,9 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:myportofolio_mobile/screens/experience_form.dart';
+import 'package:myportofolio_mobile/screens/experience_list.dart';
 import 'package:myportofolio_mobile/screens/project_form.dart';
 import 'package:myportofolio_mobile/screens/project_list.dart';
+import 'package:myportofolio_mobile/services/api_client.dart';
 import 'package:myportofolio_mobile/state/auth_state.dart';
 import 'package:myportofolio_mobile/utils/auth_guard.dart';
 import 'package:provider/provider.dart';
@@ -63,18 +65,19 @@ class ItemCard extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute<void>(
-                  builder: (context) => ProjectListPage(),
+                  builder: (context) =>
+                      ProjectListPage(apiClient: context.read<ApiClient>()),
                 ),
               );
               break;
             case HomepageAction.viewExperience:
-              ScaffoldMessenger.of(context)
-                ..hideCurrentSnackBar()
-                ..showSnackBar(
-                  SnackBar(
-                    content: Text('Kamu telah menekan tombol ${item.name}!'),
-                  ),
-                );
+              Navigator.push(
+                context,
+                MaterialPageRoute<void>(
+                  builder: (context) =>
+                      ExperienceListPage(apiClient: context.read<ApiClient>()),
+                ),
+              );
               break;
             case HomepageAction.logout:
               final AuthState authState = context.read<AuthState>();

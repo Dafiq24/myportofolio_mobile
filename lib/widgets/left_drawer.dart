@@ -1,9 +1,12 @@
 import 'package:material_ui/material_ui.dart';
 import 'package:myportofolio_mobile/screens/experience_form.dart';
+import 'package:myportofolio_mobile/screens/experience_list.dart';
 import 'package:myportofolio_mobile/screens/menu.dart';
 import 'package:myportofolio_mobile/screens/project_form.dart';
 import 'package:myportofolio_mobile/screens/project_list.dart';
+import 'package:myportofolio_mobile/services/api_client.dart';
 import 'package:myportofolio_mobile/utils/auth_guard.dart';
+import 'package:provider/provider.dart';
 
 class LeftDrawer extends StatelessWidget {
   const LeftDrawer({super.key});
@@ -55,6 +58,19 @@ class LeftDrawer extends StatelessWidget {
             },
           ),
           ListTile(
+            leading: const Icon(Icons.work_outline),
+            title: const Text('View Experiences'),
+            onTap: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute<void>(
+                  builder: (context) =>
+                      ExperienceListPage(apiClient: context.read<ApiClient>()),
+                ),
+              );
+            },
+          ),
+          ListTile(
             leading: const Icon(Icons.folder_open_outlined),
             title: const Text('View Projects'),
             onTap: () async {
@@ -64,7 +80,8 @@ class LeftDrawer extends StatelessWidget {
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute<void>(
-                  builder: (context) => ProjectListPage(),
+                  builder: (context) =>
+                      ProjectListPage(apiClient: context.read<ApiClient>()),
                 ),
               );
             },
