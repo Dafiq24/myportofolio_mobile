@@ -2,6 +2,9 @@ import 'package:material_ui/material_ui.dart';
 import 'package:myportofolio_mobile/screens/experience_form.dart';
 import 'package:myportofolio_mobile/screens/project_form.dart';
 import 'package:myportofolio_mobile/screens/project_list.dart';
+import 'package:myportofolio_mobile/state/auth_state.dart';
+import 'package:myportofolio_mobile/utils/auth_guard.dart';
+import 'package:provider/provider.dart';
 
 enum HomepageAction {
   viewExperience,
@@ -32,9 +35,12 @@ class ItemCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: () {
+        onTap: () async {
           switch (item.action) {
             case HomepageAction.addExperience:
+              if (!await ensureLoggedIn(context) || !context.mounted) {
+                return;
+              }
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -43,6 +49,9 @@ class ItemCard extends StatelessWidget {
               );
               break;
             case HomepageAction.addProject:
+              if (!await ensureLoggedIn(context) || !context.mounted) {
+                return;
+              }
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -59,12 +68,30 @@ class ItemCard extends StatelessWidget {
               );
               break;
             case HomepageAction.viewExperience:
-            case HomepageAction.logout:
               ScaffoldMessenger.of(context)
                 ..hideCurrentSnackBar()
                 ..showSnackBar(
                   SnackBar(
                     content: Text('Kamu telah menekan tombol ${item.name}!'),
+                  ),
+                );
+              break;
+            case HomepageAction.logout:
+              final AuthState authState = context.read<AuthState>();
+              final bool wasAuthenticated = authState.isAuthenticated;
+              await authState.logout();
+              if (!context.mounted) {
+                return;
+              }
+              ScaffoldMessenger.of(context)
+                ..hideCurrentSnackBar()
+                ..showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      wasAuthenticated
+                          ? 'Logout berhasil.'
+                          : 'Kamu belum login.',
+                    ),
                   ),
                 );
               break;

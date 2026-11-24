@@ -3,6 +3,7 @@ import 'package:myportofolio_mobile/screens/experience_form.dart';
 import 'package:myportofolio_mobile/screens/menu.dart';
 import 'package:myportofolio_mobile/screens/project_form.dart';
 import 'package:myportofolio_mobile/screens/project_list.dart';
+import 'package:myportofolio_mobile/utils/auth_guard.dart';
 
 class LeftDrawer extends StatelessWidget {
   const LeftDrawer({super.key});
@@ -43,7 +44,10 @@ class LeftDrawer extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.home_outlined),
             title: const Text('Home'),
-            onTap: () {
+            onTap: () async {
+              if (!await ensureLoggedIn(context) || !context.mounted) {
+                return;
+              }
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (context) => MyHomePage()),
@@ -53,7 +57,10 @@ class LeftDrawer extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.folder_open_outlined),
             title: const Text('View Projects'),
-            onTap: () {
+            onTap: () async {
+              if (!await ensureLoggedIn(context) || !context.mounted) {
+                return;
+              }
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute<void>(

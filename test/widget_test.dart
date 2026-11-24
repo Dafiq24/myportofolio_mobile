@@ -1,16 +1,46 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
+import 'package:http/http.dart' as http;
+import 'package:http/testing.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:myportofolio_mobile/main.dart';
 import 'package:myportofolio_mobile/screens/experience_form.dart';
 import 'package:myportofolio_mobile/screens/menu.dart';
 import 'package:myportofolio_mobile/screens/project_form.dart';
+import 'package:myportofolio_mobile/services/api_client.dart';
 import 'package:myportofolio_mobile/widgets/project_card.dart';
+
+ApiClient buildTestApiClient() {
+  return ApiClient(
+    client: MockClient((http.Request request) async {
+      if (request.method == 'POST' && request.url.path.endsWith('/projects/')) {
+        final Map<String, dynamic> payload =
+            jsonDecode(request.body) as Map<String, dynamic>;
+        return http.Response(
+          jsonEncode(<String, dynamic>{'id': 'project-id', ...payload}),
+          201,
+          headers: <String, String>{'content-type': 'application/json'},
+        );
+      }
+      if (request.url.path.endsWith('/auth/logout/')) {
+        return http.Response('', 204);
+      }
+      return http.Response('[]', 200);
+    }),
+    baseUrl: 'https://example.com',
+  );
+}
+
+MyApp buildAuthenticatedApp() {
+  return MyApp(apiClient: buildTestApiClient(), initialAuthToken: 'test-token');
+}
 
 void main() {
   testWidgets('portfolio menu shows profile and interactive actions', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(buildAuthenticatedApp());
 
     expect(find.text('MyPortfolio'), findsOneWidget);
     expect(find.text('Sultan Noor Dafiq'), findsOneWidget);
@@ -56,7 +86,7 @@ void main() {
   testWidgets('project form validates input and shows a complete summary', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(buildAuthenticatedApp());
 
     await tester.tap(find.text('Tambah Proyek'));
     await tester.pumpAndSettle();
@@ -127,7 +157,7 @@ void main() {
   testWidgets('drawer opens project form and Home returns to the menu', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(buildAuthenticatedApp());
 
     final ScaffoldState homeScaffold = tester.state(find.byType(Scaffold));
     homeScaffold.openDrawer();
@@ -149,7 +179,7 @@ void main() {
   testWidgets('Experience form opens from card and Back returns to menu', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(buildAuthenticatedApp());
 
     await tester.tap(find.text('Tambah Experience'));
     await tester.pumpAndSettle();
@@ -166,7 +196,7 @@ void main() {
   testWidgets('drawer opens Experience form and Home replaces the route', (
     WidgetTester tester,
   ) async {
-    await tester.pumpWidget(const MyApp());
+    await tester.pumpWidget(buildAuthenticatedApp());
 
     final ScaffoldState homeScaffold = tester.state(find.byType(Scaffold));
     homeScaffold.openDrawer();

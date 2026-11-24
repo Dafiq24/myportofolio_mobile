@@ -1,5 +1,10 @@
 import 'package:material_ui/material_ui.dart';
+import 'package:myportofolio_mobile/models/project.dart';
+import 'package:myportofolio_mobile/services/api_client.dart';
+import 'package:myportofolio_mobile/state/auth_state.dart';
+import 'package:myportofolio_mobile/utils/auth_guard.dart';
 import 'package:myportofolio_mobile/widgets/left_drawer.dart';
+import 'package:provider/provider.dart';
 
 class ProjectFormPage extends StatefulWidget {
   const ProjectFormPage({super.key});
@@ -16,6 +21,7 @@ class _ProjectFormPageState extends State<ProjectFormPage> {
   String _category = 'Web Development';
   String _technologies = '';
   String _projectLink = '';
+  bool _isSubmitting = false;
 
   static const List<String> _categories = [
     'Web Development',
@@ -79,12 +85,58 @@ class _ProjectFormPageState extends State<ProjectFormPage> {
     });
   }
 
-  void _submitForm() {
+  Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
     FocusScope.of(context).unfocus();
+    if (!await ensureLoggedIn(context) || !mounted) {
+      return;
+    }
+
+    final AuthState authState = context.read<AuthState>();
+    final String? token = authState.token;
+    if (token == null) {
+      return;
+    }
+
+    setState(() {
+      _isSubmitting = true;
+    });
+
+    try {
+      await context.read<ApiClient>().createProject(
+        Project(
+          title: _projectName.trim(),
+          description: _description.trim(),
+          techStack: _technologies.trim(),
+          projectUrl: _projectLink.trim(),
+        ),
+        token,
+      );
+    } on ApiException catch (error) {
+      if (error.statusCode == 401) {
+        authState.clearSession();
+      }
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(SnackBar(content: Text(error.message)));
+      return;
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isSubmitting = false;
+        });
+      }
+    }
+
+    if (!mounted) {
+      return;
+    }
     showDialog<void>(
       context: context,
       builder: (BuildContext dialogContext) {
@@ -216,6 +268,11 @@ class _ProjectFormPageState extends State<ProjectFormPage> {
                     onChanged: (String value) {
                       _technologies = value;
                     },
+                    validator: (String? value) => _validateRequired(
+                      value,
+                      fieldName: 'Teknologi',
+                      maxLength: 200,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
@@ -234,9 +291,17 @@ class _ProjectFormPageState extends State<ProjectFormPage> {
                   const SizedBox(height: 20),
                   FilledButton.icon(
                     key: const ValueKey('save-project-button'),
-                    onPressed: _submitForm,
-                    icon: const Icon(Icons.save_outlined),
-                    label: const Text('Save'),
+                    onPressed: _isSubmitting ? null : _submitForm,
+                    icon: _isSubmitting
+                        ? const SizedBox.square(
+                            dimension: 18,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Icon(Icons.save_outlined),
+                    label: Text(_isSubmitting ? 'Menyimpan...' : 'Save'),
                   ),
                 ],
               ),

@@ -58,4 +58,50 @@ void main() {
       ),
     );
   });
+
+  test('ApiClient authenticates, creates a Project, and logs out', () async {
+    final List<http.Request> requests = <http.Request>[];
+    final ApiClient apiClient = ApiClient(
+      client: MockClient((http.Request request) async {
+        requests.add(request);
+        if (request.url.path.endsWith('/auth/token/')) {
+          return http.Response(
+            jsonEncode(<String, String>{'token': 'abc'}),
+            200,
+          );
+        }
+        if (request.url.path.endsWith('/auth/logout/')) {
+          return http.Response('', 204);
+        }
+        final Map<String, dynamic> payload =
+            jsonDecode(request.body) as Map<String, dynamic>;
+        return http.Response(
+          jsonEncode(<String, dynamic>{'id': 'project-id', ...payload}),
+          201,
+        );
+      }),
+      baseUrl: 'https://example.com',
+    );
+
+    final String token = await apiClient.login(
+      username: 'owner',
+      password: 'secret',
+    );
+    final Project project = await apiClient.createProject(
+      const Project(
+        title: 'Project API',
+        description: 'Created with a token.',
+        techStack: 'Flutter, DRF',
+        projectUrl: 'https://example.com/project',
+      ),
+      token,
+    );
+    await apiClient.logout(token);
+
+    expect(token, 'abc');
+    expect(project.id, 'project-id');
+    expect(requests, hasLength(3));
+    expect(requests[1].headers['authorization'], 'Token abc');
+    expect(requests[2].headers['authorization'], 'Token abc');
+  });
 }
