@@ -1,5 +1,7 @@
 # MyPortfolio Mobile
 
+[![Flutter CI](https://github.com/Dafiq24/myportofolio_mobile/actions/workflows/flutter-ci.yml/badge.svg)](https://github.com/Dafiq24/myportofolio_mobile/actions/workflows/flutter-ci.yml)
+
 MyPortfolio Mobile adalah aplikasi Flutter milik **Sultan Noor Dafiq** (`2506600713`, PBP E). Proyek ini menjadi antarmuka mobile untuk pengembangan lanjutan portofolio yang sebelumnya dibuat menggunakan Django.
 
 - Repositori Flutter: [Dafiq24/myportofolio_mobile](https://github.com/Dafiq24/myportofolio_mobile)
@@ -8,11 +10,12 @@ MyPortfolio Mobile adalah aplikasi Flutter milik **Sultan Noor Dafiq** (`2506600
 ## Daftar Isi
 
 - [Menjalankan Proyek](#menjalankan-proyek)
-- [Struktur Awal Proyek](#struktur-awal-proyek)
+- [Struktur Proyek](#struktur-proyek)
 - [Tutorial 8](#tutorial-8)
 - [Tugas Individu 7](#tugas-individu-7)
 - [Tutorial 9](#tutorial-9)
 - [Tugas Individu 8](#tugas-individu-8)
+- [Tutorial 10](#tutorial-10)
 - [Transparansi Penggunaan AI](#transparansi-penggunaan-ai)
 - [Pertanyaan Reflektif Tugas 7](#pertanyaan-reflektif-tugas-7)
 - [Pertanyaan Reflektif Tugas 8](#pertanyaan-reflektif-tugas-8)
@@ -41,16 +44,20 @@ Visual Studio belum dipasang karena proyek ini tidak menargetkan aplikasi deskto
 git clone https://github.com/Dafiq24/myportofolio_mobile.git
 cd myportofolio_mobile
 flutter pub get
+dart run build_runner build
 flutter doctor -v
 flutter devices
-flutter run -d chrome
+flutter run -d chrome --dart-define=API_BASE_URL=http://127.0.0.1:8000
 ```
+
+`API_BASE_URL` dapat diarahkan ke backend lain menggunakan `--dart-define`. Nilai bawaan `http://10.0.2.2:8000` ditujukan untuk Android Emulator. File hasil generator `*.g.dart` tidak disimpan di Git, sehingga `dart run build_runner build` wajib dijalankan setelah clone atau perubahan model JSON.
 
 Pada sesi `flutter run`, tekan `r` untuk hot reload, `R` untuk hot restart, dan `q` untuk menghentikan aplikasi.
 
 ### Validasi
 
 ```powershell
+dart run build_runner build
 flutter analyze
 flutter test
 git diff --check
@@ -59,23 +66,40 @@ git diff --check
 Hasil terakhir sebelum dokumentasi ini dibuat:
 
 - `flutter analyze`: tidak menemukan masalah.
-- `flutter test`: seluruh widget test lulus.
+- `flutter test`: seluruh 16 unit dan widget test lulus.
 - `git diff --check`: tidak menemukan whitespace error; peringatan LF ke CRLF hanya berkaitan dengan normalisasi line ending Git di Windows.
+- GitHub Actions: job kualitas dan build APK lulus; artifact release tersedia dari workflow `Flutter CI`.
 
-## Struktur Awal Proyek
+## Struktur Proyek
 
 ```text
 lib/
+├── config.dart
 ├── main.dart
+├── models/
+│   └── project.dart
 ├── screens/
 │   ├── experience_form.dart
+│   ├── login.dart
 │   ├── menu.dart
-│   └── project_form.dart
+│   ├── project_detail.dart
+│   ├── project_form.dart
+│   └── project_list.dart
+├── services/
+│   └── api_client.dart
+├── state/
+│   └── auth_state.dart
+├── utils/
+│   └── auth_guard.dart
 └── widgets/
     ├── left_drawer.dart
     └── project_card.dart
 test/
+├── api_client_test.dart
+├── auth_flow_test.dart
 ├── experience_form_test.dart
+├── project_list_test.dart
+├── project_model_test.dart
 └── widget_test.dart
 ```
 
@@ -180,6 +204,51 @@ Perubahan utama dipublikasikan melalui:
 - [x] Menjalankan `flutter test`, `flutter analyze`, dan pemeriksaan visual.
 - [x] Melengkapi refleksi dan transparansi penggunaan AI.
 
+## Tutorial 10
+
+### Dokumentasi Tutorial 10
+
+#### (24/11/2026)
+
+Tutorial 10 menghubungkan aplikasi Flutter dengan Django REST Framework menggunakan model `Project`. Backend mendapatkan model, migration, serializer, endpoint publik untuk membaca data, mutasi khusus superuser, autentikasi token, logout token, CORS, registrasi admin, serta regression test. Implementasi backend dipublikasikan pada commit [`ce5f553`](https://github.com/Dafiq24/myportfolio/commit/ce5f5538b12f8cc9d658391cf4415e90463923cb).
+
+Pada Flutter, konfigurasi `API_BASE_URL` dibuat menggunakan `String.fromEnvironment` agar alamat lokal, emulator, dan production tidak ditulis permanen dalam logika aplikasi. Model `Project` menggunakan `json_serializable` dengan `FieldRename.snake`, sehingga `techStack`, `projectUrl`, dan `projectImageUrl` dipetakan ke kontrak JSON Django. ID hanya dibaca dari server dan tidak dikirim saat membuat proyek. Fondasi dependensi, model, Android networking, generator, dan test kontrak dipublikasikan pada commit [`7752d6c`](https://github.com/Dafiq24/myportofolio_mobile/commit/7752d6c8d194f85abd8785f3f892dbb39ff6ccad).
+
+`ApiClient` menangani HTTP serta validasi status respons. Halaman daftar Project menggunakan `FutureBuilder` dan menyediakan loading indicator, pesan error beserta tombol retry, empty state, pull-to-refresh, daftar data, dan navigasi detail. Halaman detail mengambil satu Project berdasarkan UUID dan menampilkan judul, teknologi, tautan, gambar opsional, serta deskripsi. Fitur baca publik dan pengujiannya dipublikasikan pada commit [`cb9f36d`](https://github.com/Dafiq24/myportofolio_mobile/commit/cb9f36d42248f4fbd6e46a76c3f9fdf630eabd0a).
+
+Autentikasi dikelola oleh `AuthState` melalui Provider. Pengguna yang membuka form terlindungi diarahkan ke halaman login, lalu token dikirim menggunakan header `Authorization: Token ...`. Form Project kini mengirim POST sungguhan ke Django. Respons `401` membersihkan sesi lokal, sedangkan `403` mempertahankan sesi dan menjelaskan bahwa akun tersebut bukan pemilik portofolio. Logout menghapus token di server dan state aplikasi. Integrasi autentikasi serta mutation dipublikasikan pada commit [`db4942f`](https://github.com/Dafiq24/myportofolio_mobile/commit/db4942f153ee7d57ab58afbd1b42d138ab12c6f7).
+
+### Kontrak API Project
+
+| Operasi | Method dan endpoint | Akses |
+| --- | --- | --- |
+| Login token | `POST /api/v1/auth/token/` | Publik dengan username dan password valid |
+| Logout token | `POST /api/v1/auth/logout/` | Token terautentikasi |
+| Daftar Project | `GET /api/v1/projects/` | Publik |
+| Detail Project | `GET /api/v1/projects/<uuid>/` | Publik |
+| Tambah Project | `POST /api/v1/projects/` | Superuser pemilik portofolio |
+| Ubah Project | `PUT/PATCH /api/v1/projects/<uuid>/` | Superuser pemilik portofolio |
+| Hapus Project | `DELETE /api/v1/projects/<uuid>/` | Superuser pemilik portofolio |
+
+### Continuous Integration
+
+Workflow `Flutter CI` menggunakan reusable workflow `VeryGoodOpenSource/very_good_workflows` untuk memasang dependency, membuat ulang kode JSON, memeriksa format, menjalankan analyzer, dan mengeksekusi seluruh test dari checkout bersih. Job berikutnya membangun APK release dengan backend PWS dan mengunggah `app-release.apk` sebagai artifact `myportofolio-mobile-apk`.
+
+Workflow diperkenalkan pada commit [`176949b`](https://github.com/Dafiq24/myportofolio_mobile/commit/176949bda6e2fcb758064051d116db7951611227). Run pertama berhasil menyelesaikan kedua job dan menghasilkan artifact APK sekitar 23,98 MB. Bukti eksekusi tersedia pada [Flutter CI run #45405811452](https://github.com/Dafiq24/myportofolio_mobile/actions/runs/45405811452).
+
+### Status Implementasi Tutorial 10
+
+- [x] Menyediakan Project API publik dan mutasi terlindungi pada Django.
+- [x] Mengaktifkan token authentication, logout token, dan CORS.
+- [x] Menggunakan model JSON hasil generator dengan field yang sesuai serializer.
+- [x] Menampilkan daftar serta detail Project dari API.
+- [x] Menangani loading, error, retry, empty state, dan refresh.
+- [x] Melindungi form menggunakan login token dan Provider.
+- [x] Mengirim Project baru ke Django dan menangani `401` serta `403`.
+- [x] Menambahkan unit test, MockClient test, dan widget test.
+- [x] Menjalankan 16 test dan analyzer tanpa masalah.
+- [x] Menjalankan CI serta menghasilkan artifact APK release.
+
 ## Transparansi Penggunaan AI
 
 AI digunakan sebagai pendamping belajar, bukan sebagai pengganti verifikasi. Bantuan AI mencakup penjelasan konsep Flutter, diagnosis lingkungan pengembangan, penyusunan struktur awal widget, saran pengujian, peninjauan keluaran terminal, dan penyusunan dokumentasi. Pemilik proyek tetap menentukan identitas, konteks tombol, warna, struktur commit, serta keputusan akhir atas setiap perubahan.
@@ -202,6 +271,9 @@ Prompt diberikan secara bertahap dengan menyertakan tujuan chapter, kondisi proy
 | Form Experience | Menyesuaikan form Tugas 8 dengan field model Experience pada proyek Django. | Membantu menyusun delapan input, pilihan kategori, batas panjang, validasi rentang bilangan, dan validasi URL. | Kasus invalid dan valid diuji langsung; kegagalan test akibat tombol di luar viewport diperbaiki dengan menggulir form pada test. |
 | Navigasi Tugas 8 | Menghubungkan kartu dan drawer tanpa merusak navigasi Home dan Add Project. | Menyarankan enum `HomepageAction`, `Navigator.push()` untuk kartu, `pushReplacement()` untuk drawer, dan test Back/Home. | Semua jalur diuji dari terminal dan browser, lalu hash lokal dan GitHub dibandingkan setelah push. |
 | Finalisasi Tugas 8 | Mengaudit rubrik, kode final, riwayat commit, hasil test, dan pertanyaan refleksi. | Membantu menyusun dokumentasi serta jawaban yang merujuk pada implementasi nyata. | Klaim README dicocokkan dengan file final dan hasil pengujian pengguna sebelum commit dokumentasi. |
+| Tutorial 10 backend | Mencocokkan kebutuhan token authentication, CORS, Project API, dan izin pemilik dengan Django yang sudah ada. | Membantu membuat model, serializer, endpoint, permission, migration, dan regression test tanpa merusak API Experience atau Certification. | System check, migration check, test API, PWS deployment, serta kesamaan hash GitHub dan PWS diverifikasi sebelum beralih ke Flutter. |
+| Tutorial 10 Flutter | Mengintegrasikan model Project, API publik, detail, autentikasi token, POST, logout, dan penanganan sesi secara bertahap. | Membantu menyusun konfigurasi environment, model generated JSON, ApiClient, Provider, UI states, navigation guard, dan MockClient tests. | Setiap chapter diuji melalui analyzer, seluruh test, browser, backend lokal, commit terpisah, dan pemeriksaan hash remote. |
+| Tutorial 10 CI | Menyiapkan workflow kualitas dan artifact APK ketika build Gradle lokal terganggu timeout Maven. | Membantu mengonfigurasi reusable Very Good Workflow, generator sebelum analyze/test, build release, serta upload artifact. | Run GitHub Actions diperiksa langsung hingga kedua job sukses dan artifact APK benar-benar tersedia. |
 
 ### Evaluasi kritis dan koreksi manual
 
@@ -210,7 +282,7 @@ Prompt diberikan secara bertahap dengan menyertakan tujuan chapter, kondisi proy
 - Data `Burhan`, NPM, kelas, label tombol, dan warna dari contoh awal dikoreksi manual agar sesuai identitas Sultan Noor Dafiq dan tema Experience pada portofolio.
 - Saran AI selalu ditinjau karena AI dapat menghasilkan asumsi yang benar secara umum tetapi tidak sesuai rubrik, lingkungan Windows, atau kode aktual proyek.
 
-Keterbatasan saat ini adalah data form baru ditampilkan pada dialog dan belum disimpan permanen atau dikirim ke API Django. Integrasi autentikasi, pengambilan data Experience, dan penyimpanan ke backend menjadi ruang lingkup pengembangan berikutnya.
+Integrasi Project kini sudah membaca dan menyimpan data melalui API Django dengan autentikasi token. Keterbatasan berikutnya berada pada bagian Experience: form masih menampilkan dialog lokal dan daftar Experience belum dikonsumsi oleh Flutter. Integrasi penuh Experience menjadi ruang lingkup Tugas Individu 9.
 
 ## Pertanyaan Reflektif Tugas 7
 
